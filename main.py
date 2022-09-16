@@ -3,7 +3,7 @@ import logging
 from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, InlineQueryHandler, filters, CallbackContext
 from dotenv import load_dotenv
-from db import StockPercentAlert
+from database.utils import *
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -20,13 +20,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # command exp: /percent_alert TSLA 5 america NASDAQ
-    # context.args = ['TSLA', 5, 'america, 'NASDAQ']
-    name, percent, screener, exchange = context.args
-    new_alert = StockPercentAlert.create(
-        name=name, percent=float(percent), screener=screener, exchange=exchange)
-    for stock in StockPercentAlert.select():
-        print(stock.name)
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Registed your alert for {new_alert.name}")
+    # context.args = ['TSLA', 'america, 'NASDAQ', '5']
+    symbol, screener, exchange, percent = context.args
+    chat_id = update.effective_chat.id
+    # alert = register_percent_alert(
+    #     chat_id, symbol, screener, exchange, percent)
+    context.job
+    await context.bot.send_message(chat_id=chat_id, text=f"Registed your alert for {alert.symbol} at {alert.percent}%")
 
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
