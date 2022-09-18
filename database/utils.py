@@ -1,10 +1,10 @@
-from db import *
+from database.db import StockPercentAlert
 
 
 def register_percent_alert(chat_id, symbol, screener, exchange, percent):
     try:
         alert = get_alert_by_all_information(
-            chat_id, symbol, screener, exchange, percent)
+            str(chat_id), symbol, screener, exchange, percent)
         if not alert:
             alert = StockPercentAlert.create(chat_id=chat_id, symbol=symbol, percent=float(
                 percent), screener=screener, exchange=exchange)
