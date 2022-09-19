@@ -20,7 +20,6 @@ def get_alert_by_all_information(chat_id, symbol, screener, exchange, percent):
             percent), StockPercentAlert.screener == screener, StockPercentAlert.exchange == exchange)
         return alert
     except Exception as e:
-        print('Get alert by all information error:', str(e))
         return None
 
 
@@ -29,8 +28,15 @@ def get_alert_by_chat_id(chat_id):
         alerts = StockPercentAlert.select().where(StockPercentAlert.chat_id == chat_id)
         return alerts
     except Exception as e:
-        print('Get alert by chat id error:', str(e))
         return []
+
+
+def get_alert_by_id(id):
+    try:
+        alert = StockPercentAlert.get_by_id(id)
+        return alert
+    except Exception as e:
+        return None
 
 
 if __name__ == '__main__':

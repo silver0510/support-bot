@@ -1,11 +1,13 @@
 import os
 import hashlib
 import logging
-from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, InlineQueryHandler, filters, CallbackContext
+from datetime import time
+from telegram import Update
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
 from database.utils import *
 from database.db import *
+from check_price import *
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -17,12 +19,13 @@ TOKEN = os.getenv('TOKEN')
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text='Register a alert with format:\n `/percent_alert symbol screener exchange percent`.\nExp: /percent_alert ETHUSDT crypto BINANCE 5.\nYou can search on https://tvdb.brianthe.dev to see which symbol, exchange, and screener to use')
 
 
 async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ 
         command exp: /percent_alert TSLA america NASDAQ 5 
+        command exp: /percent_alert ETHUSDT crypto BINANCE 1 
         context.args = ['TSLA', 'america, 'NASDAQ', '5'] 
     """
     symbol, screener, exchange, percent = context.args
@@ -32,19 +35,35 @@ async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not alert:
         await update.effective_message.reply_text("Sorry we can not register your command!")
         return
-    alert_id = hash_alert_info(
-        str(chat_id), symbol, screener, exchange, percent)
-    job_removed = remove_job_if_exists(alert_id, context)
+    job_removed = remove_job_if_exists(str(alert.id), context)
     context.job_queue.run_repeating(
-        alert_callback, interval=300, first=5, chat_id=chat_id, name=alert_id, data=alert)
+        alert_callback, interval=10, first=5, chat_id=chat_id, name=str(alert.id), data=alert)
     await context.bot.send_message(chat_id=chat_id, text=f"Registed your alert for {symbol} at {percent}% successfully.")
+
+
+async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
 
 
 async def alert_callback(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     alert = job.data
-    print(alert.chat_id)
-    # await context.bot.send_message(job.chat_id, text=f"Beep! {alert.chat_id}!")
+    price, change, should_alert = get_and_check_alert(alert.id)
+    print("price", price)
+    print("change", change)
+    print("should_alert", should_alert)
+
+    if should_alert:
+        await context.bot.send_message(job.chat_id, text=f"{alert.symbol} has changed {round(change, 2)}%. Current price: {price}")
+        job.enabled = False
+
+
+async def enable_all_jobs_at_start_day_callback(context: ContextTypes.DEFAULT_TYPE):
+    current_jobs = context.job_queue.jobs()
+    if not current_jobs:
+        return
+    for job in current_jobs:
+        job.enabled = True
 
 
 def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
@@ -61,10 +80,6 @@ def hash_alert_info(chat_id, symbol, screener, exchange, percent):
     return hashlib.md5((chat_id + symbol + screener + exchange + percent).encode()).hexdigest()
 
 
-async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
-
-
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TOKEN).build()
 
@@ -75,4 +90,8 @@ if __name__ == '__main__':
     application.add_handler(percent_alert_handler)
     application.add_handler(unknown_handler)
 
+    # add job queue handler
+    job_queue = application.job_queue
+    job_queue.run_daily(enable_all_jobs_at_start_day_callback,
+                        time(0, 0, 0))
     application.run_polling()

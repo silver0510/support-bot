@@ -17,8 +17,20 @@ def validate_symbol_data(symbol, screener, exchange):
         return False
 
 
-def get_and_check_alert(chat_id):
-    alerts = get_alert_by_chat_id(chat_id)
+def get_and_check_alert(id):
+    '''
+        Get data from database by id and check the price change
+        return True if need to alert, False otherwise
+    '''
+
+    alert = get_alert_by_id(id)
+    if alert:
+        price, change = check_symbol_change(
+            alert.symbol, alert.screener, alert.exchange)
+        if not change:
+            return price, change, False
+        else:
+            return price, change, change > alert.percent
 
 
 def check_symbol_change(symbol, screener, exchange):
@@ -32,7 +44,7 @@ def check_symbol_change(symbol, screener, exchange):
         return symbol_info.get_analysis().indicators['close'], symbol_info.get_analysis().indicators['change']
     except Exception as e:
         print(str(e))
-        return False
+        return 0, 0
 
 
 if __name__ == '__main__':
