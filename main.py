@@ -1,4 +1,5 @@
 import os
+from os import path
 import hashlib
 import logging
 from datetime import time
@@ -8,9 +9,11 @@ from dotenv import load_dotenv
 from database.utils import *
 from database.db import *
 from check_price import *
+from database.db import init_db
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
+DB_NAME = os.getenv('DB_NAME')
 
 # logging.basicConfig(
 #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -74,6 +77,9 @@ def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> b
 
 
 if __name__ == '__main__':
+    if not path.exists(DB_NAME):
+        init_db()
+
     application = ApplicationBuilder().token(TOKEN).build()
 
     start_handler = CommandHandler('start', start)

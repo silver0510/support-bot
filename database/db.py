@@ -1,6 +1,11 @@
 from peewee import *
+import os
+from dotenv import load_dotenv
 
-db = SqliteDatabase('support-bot.db')
+load_dotenv()
+DB_NAME = os.getenv('DB_NAME')
+
+db = SqliteDatabase(DB_NAME)
 
 
 class BaseModel(Model):
