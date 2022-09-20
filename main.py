@@ -49,9 +49,6 @@ async def alert_callback(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     alert = job.data
     price, change, should_alert = get_and_check_alert(alert.id)
-    print("price", price)
-    print("change", change)
-    print("should_alert", should_alert)
 
     if should_alert:
         await context.bot.send_message(job.chat_id, text=f"{alert.symbol} has changed {round(change, 2)}%. Current price: {price}")
@@ -74,10 +71,6 @@ def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> b
     for job in current_jobs:
         job.schedule_removal()
     return True
-
-
-def hash_alert_info(chat_id, symbol, screener, exchange, percent):
-    return hashlib.md5((chat_id + symbol + screener + exchange + percent).encode()).hexdigest()
 
 
 if __name__ == '__main__':

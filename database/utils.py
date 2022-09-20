@@ -1,4 +1,5 @@
 from database.db import StockPercentAlert
+from write_log import write_log
 
 
 def register_percent_alert(chat_id, symbol, screener, exchange, percent):
@@ -10,7 +11,7 @@ def register_percent_alert(chat_id, symbol, screener, exchange, percent):
                 percent), screener=screener, exchange=exchange)
         return alert
     except Exception as e:
-        print('Register alert error:', str(e))
+        write_log(f"Register alert error: {e}")
         return None
 
 

@@ -1,5 +1,6 @@
 from tradingview_ta import TA_Handler, Interval, Exchange
 from database.utils import *
+from write_log import write_log
 
 
 def validate_symbol_data(symbol, screener, exchange):
@@ -13,7 +14,7 @@ def validate_symbol_data(symbol, screener, exchange):
         symbol_info.get_analysis()
         return True
     except Exception as e:
-        print(str(e))
+        write_log(f"Validation symbol error: {e}")
         return False
 
 
@@ -43,7 +44,7 @@ def check_symbol_change(symbol, screener, exchange):
     try:
         return symbol_info.get_analysis().indicators['close'], symbol_info.get_analysis().indicators['change']
     except Exception as e:
-        print(str(e))
+        write_log(f"Check price of symbol error: {e}")
         return 0, 0
 
 
