@@ -13,3 +13,9 @@ def write_log(message):
     f = open(LOG_FILE, 'a')
     f.writelines(f'{error}\n')
     f.close()
+
+def write_activity_log(message):
+    log = f'{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - {message}'
+    f = open(LOG_FILE, 'a')
+    f.writelines(f'{log}\n')
+    f.close()
