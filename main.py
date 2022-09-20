@@ -83,12 +83,16 @@ def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> b
         job.schedule_removal()
     return True
 
+def load_all_alerts_and_create_job():
+    pass
 
 if __name__ == '__main__':
+    application = ApplicationBuilder().token(TOKEN).build()
     if not path.exists(DB_NAME):
         init_db()
+    else:
+        load_all_alerts_and_create_job()
 
-    application = ApplicationBuilder().token(TOKEN).build()
 
     start_handler = CommandHandler('start', start)
     percent_alert_handler = CommandHandler('percent_alert', percent_alert)
