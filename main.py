@@ -50,6 +50,15 @@ async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await context.bot.send_message(chat_id=chat_id, text="You have no permission to use this feature. Please contact https://t.me/ryan_pham")
 
+
+async def show_alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pass
+
+
+async def delete_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pass
+
+
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
 
@@ -70,7 +79,7 @@ async def enable_all_jobs_at_start_day_callback(context: ContextTypes.DEFAULT_TY
         return
     for job in current_jobs:
         job.enabled = True
-    
+
     write_activity_log("Reset all jobs for the new day")
 
 
@@ -83,8 +92,10 @@ def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> b
         job.schedule_removal()
     return True
 
+
 def load_all_alerts_and_create_job():
     pass
+
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TOKEN).build()
@@ -93,12 +104,15 @@ if __name__ == '__main__':
     else:
         load_all_alerts_and_create_job()
 
-
     start_handler = CommandHandler('start', start)
     percent_alert_handler = CommandHandler('percent_alert', percent_alert)
+    show_alerts_handler = CommandHandler('show_alerts', show_alerts)
+    delete_alert_handler = CommandHandler('delete_alert', delete_alert)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
     application.add_handler(start_handler)
     application.add_handler(percent_alert_handler)
+    application.add_handler(show_alerts_handler)
+    application.add_handler(delete_alert_handler)
     application.add_handler(unknown_handler)
 
     # add job queue handler
