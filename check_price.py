@@ -31,7 +31,18 @@ def get_and_check_alert(id):
         if not change:
             return price, change, False
         else:
-            return price, change, change > alert.percent
+            if alert.percent < 0:
+                '''
+                    Alert when change drop below the percent when
+                    the alert percent is negative.
+                '''  
+                return price, change, change < alert.percent
+            else:
+                '''
+                    Alert when change increase above the percent when
+                    the alert percent is positive.
+                '''  
+                return price, change, change > alert.percent
 
 
 def check_symbol_change(symbol, screener, exchange):
