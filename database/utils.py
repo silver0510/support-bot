@@ -24,6 +24,15 @@ def get_alert_by_all_information(chat_id, symbol, screener, exchange, percent):
         return None
 
 
+def get_all_alerts():
+    try:
+        alerts = StockPercentAlert.select()
+        return alerts
+    except Exception as e:
+        print(e)
+        return []
+
+
 def get_alert_by_chat_id(chat_id):
     try:
         alerts = StockPercentAlert.select().where(StockPercentAlert.chat_id == chat_id)
@@ -40,7 +49,9 @@ def get_alert_by_id(id):
         return None
 
 
-if __name__ == '__main__':
-    print(register_percent_alert('123456789', 'TSLA', 'america', 'NASDAQ', '5'))
-    # print(get_alert_by_all_information(
-    #     '123456789', 'TSLA', 'america', 'NASDAQ', '5').symbol)
+# if __name__ == '__main__':
+#     register_percent_alert('123456789', 'TSLA', 'america', 'NASDAQ', '5')
+#     for i in get_all_alerts():
+#         print(i.symbol)
+#     print(get_alert_by_all_information(
+#         '123456789', 'TSLA', 'america', 'NASDAQ', '5').symbol)

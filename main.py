@@ -4,12 +4,13 @@ import hashlib
 import logging
 from datetime import time
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, JobQueue
 from dotenv import load_dotenv
 from database.utils import *
 from database.db import *
 from check_price import *
 from database.db import init_db
+from database.utils import get_all_alerts
 from write_log import write_activity_log
 
 load_dotenv()
@@ -93,8 +94,14 @@ def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> b
     return True
 
 
-def load_all_alerts_and_create_job():
-    pass
+def load_all_alerts_and_create_job(job_queue: JobQueue):
+    alerts = get_all_alerts()
+    if len(alerts):
+        for alert in alerts:
+            job_queue.run_repeating(
+                alert_callback, interval=60, first=5, chat_id=alert.chat_id, name=str(alert.id), data=alert)
+            msg = f"Registed your alert for {alert.symbol} at {alert.percent}% successfully."
+            write_activity_log(msg)
 
 
 if __name__ == '__main__':
@@ -102,7 +109,7 @@ if __name__ == '__main__':
     if not path.exists(DB_NAME):
         init_db()
     else:
-        load_all_alerts_and_create_job()
+        load_all_alerts_and_create_job(application.job_queue)
 
     start_handler = CommandHandler('start', start)
     percent_alert_handler = CommandHandler('percent_alert', percent_alert)
