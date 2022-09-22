@@ -3,7 +3,7 @@ import os
 from os import path
 import hashlib
 import logging
-import asyncio
+import random
 from datetime import time
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, JobQueue
@@ -38,10 +38,10 @@ async def my_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ 
-        command exp: /register_alert TSLA america NASDAQ 5 
-        command exp: /register_alert ETHUSDT crypto BINANCE 1 
-        context.args = ['TSLA', 'america, 'NASDAQ', '5'] 
+    """
+        command exp: /register_alert TSLA america NASDAQ 5
+        command exp: /register_alert ETHUSDT crypto BINANCE 1
+        context.args = ['TSLA', 'america, 'NASDAQ', '5']
     """
     chat_id = update.effective_chat.id
     if chat_id in ADMINS_TELEGRAM_ID:
@@ -134,11 +134,14 @@ def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> b
 def load_all_alerts_and_create_job(job_queue: JobQueue):
     alerts = get_all_alerts()
     if len(alerts):
+        first = 5
         for alert in alerts:
             job_queue.run_repeating(
-                alert_callback, interval=ALERT_INTERVAL, first=5, chat_id=alert.chat_id, name=str(alert.id), data=alert)
+                alert_callback, interval=random.randint(
+                    60,  ALERT_INTERVAL + 1), first=first, chat_id=alert.chat_id, name=str(alert.id), data=alert)
             msg = f"Registed your alert for {alert.symbol} at {alert.percent}% successfully."
             write_activity_log(msg)
+            first += 1
 
 
 if __name__ == '__main__':
