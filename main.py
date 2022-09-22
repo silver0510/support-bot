@@ -10,7 +10,7 @@ from database.utils import *
 from database.db import *
 from check_price import *
 from database.db import init_db
-from database.utils import get_all_alerts
+from database.utils import *
 from write_log import write_activity_log
 
 load_dotenv()
@@ -40,7 +40,7 @@ async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
         alert = register_percent_alert(
             chat_id, symbol, screener, exchange, percent)
         if not alert:
-            await update.effective_message.reply_text("Sorry we can not register your command!")
+            await update.effective_message.reply_text("Sorry we can not register your alert!")
             return
         job_removed = remove_job_if_exists(str(alert.id), context)
         context.job_queue.run_repeating(
@@ -53,11 +53,35 @@ async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def show_alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    pass
+    chat_id = update.effective_chat.id
+    alerts = get_alert_by_chat_id(chat_id)
+    if len(alerts):
+        msg = 'List of alerts:'
+        for index, alert in enumerate(alerts):
+            msg += f"\n{str(index + 1)}. {alert.symbol} - {alert.screener} - {alert.exchange} - {alert.percent}"
+        await context.bot.send_message(chat_id=chat_id, text=msg)
+    else:
+        await context.bot.send_message(chat_id=chat_id, text="You do not have any alerts.")
 
 
 async def delete_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    pass
+    msg = "Sorry we can not delete your alert!"
+    chat_id = update.effective_chat.id
+    symbol, screener, exchange, percent = context.args
+    is_delete_successfuly, id = delete_percent_alert(
+        chat_id, symbol, screener, exchange, percent)
+    if not is_delete_successfuly:
+        await update.effective_message.reply_text(msg)
+        return
+    else:
+        if not id:
+            msg = f"Delete your alert for {symbol} at {percent}% successfully."
+        else:
+            job_removed = remove_job_if_exists(str(id), context)
+            if job_removed:
+                msg = f"Delete your alert for {symbol} at {percent}% successfully."
+                write_activity_log(msg)
+        await context.bot.send_message(chat_id=chat_id, text=msg)
 
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -86,12 +110,16 @@ async def enable_all_jobs_at_start_day_callback(context: ContextTypes.DEFAULT_TY
 
 def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
     """Remove job with given name. Returns whether job was removed."""
-    current_jobs = context.job_queue.get_jobs_by_name(alert_id)
-    if not current_jobs:
+    try:
+        current_jobs = context.job_queue.get_jobs_by_name(alert_id)
+        if not current_jobs:
+            return True
+        for job in current_jobs:
+            job.schedule_removal()
+        return True
+    except Exception as e:
+        write_log("Remove job error: {e}")
         return False
-    for job in current_jobs:
-        job.schedule_removal()
-    return True
 
 
 def load_all_alerts_and_create_job(job_queue: JobQueue):
@@ -112,7 +140,7 @@ if __name__ == '__main__':
         load_all_alerts_and_create_job(application.job_queue)
 
     start_handler = CommandHandler('start', start)
-    percent_alert_handler = CommandHandler('percent_alert', percent_alert)
+    percent_alert_handler = CommandHandler('register_alert', percent_alert)
     show_alerts_handler = CommandHandler('show_alerts', show_alerts)
     delete_alert_handler = CommandHandler('delete_alert', delete_alert)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)

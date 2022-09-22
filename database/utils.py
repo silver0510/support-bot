@@ -15,6 +15,21 @@ def register_percent_alert(chat_id, symbol, screener, exchange, percent):
         return None
 
 
+def delete_percent_alert(chat_id, symbol, screener, exchange, percent):
+    try:
+        alert = get_alert_by_all_information(
+            str(chat_id), symbol, screener, exchange, percent)
+        if not alert:
+            return True, None
+        else:
+            id = alert.id
+            alert.delete_instance()
+            return True, id
+    except Exception as e:
+        write_log(f"Delete alert error: {e}")
+        return False, None
+
+
 def get_alert_by_all_information(chat_id, symbol, screener, exchange, percent):
     try:
         alert = StockPercentAlert.get(StockPercentAlert.chat_id == chat_id, StockPercentAlert.symbol == symbol, StockPercentAlert.percent == float(
