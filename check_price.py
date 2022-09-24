@@ -26,23 +26,27 @@ def get_and_check_alert(id):
 
     alert = get_alert_by_id(id)
     if alert:
-        price, change = check_symbol_change(
-            alert.symbol, alert.screener, alert.exchange)
-        if not change:
-            return price, change, False
+        return check_alert(alert)
+
+
+def check_alert(alert):
+    price, change = check_symbol_change(
+        alert.symbol, alert.screener, alert.exchange)
+    if not change:
+        return price, change, False
+    else:
+        if alert.percent < 0:
+            '''
+                Alert when change drop below the percent when
+                the alert percent is negative.
+            '''
+            return price, change, change < alert.percent
         else:
-            if alert.percent < 0:
-                '''
-                    Alert when change drop below the percent when
-                    the alert percent is negative.
-                '''  
-                return price, change, change < alert.percent
-            else:
-                '''
-                    Alert when change increase above the percent when
-                    the alert percent is positive.
-                '''  
-                return price, change, change > alert.percent
+            '''
+                Alert when change increase above the percent when
+                the alert percent is positive.
+            '''
+            return price, change, change > alert.percent
 
 
 def check_symbol_change(symbol, screener, exchange):

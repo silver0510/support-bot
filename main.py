@@ -51,9 +51,6 @@ async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not alert:
             await update.effective_message.reply_text("Sorry we can not register your alert!")
             return
-        job_removed = remove_job_if_exists(str(alert.id), context)
-        context.job_queue.run_repeating(
-            alert_callback, interval=60, first=5, chat_id=chat_id, name=str(alert.id), data=alert)
         msg = f"Registed your alert for {symbol} at {percent}% successfully."
         write_activity_log(msg)
         await context.bot.send_message(chat_id=chat_id, text=msg)
@@ -98,23 +95,20 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def alert_callback(context: ContextTypes.DEFAULT_TYPE):
-    job = context.job
-    alert = job.data
-    price, change, should_alert = get_and_check_alert(alert.id)
-
-    if should_alert:
-        await context.bot.send_message(job.chat_id, text=f"{alert.symbol} has changed {round(change, 2)}%. Current price: {price}")
-        job.enabled = False
+    alerts = get_today_alerts()
+    for alert in alerts:
+        price, change, should_alert = check_alert(alert)
+        if should_alert:
+            await context.bot.send_message(alert.chat_id, text=f"{alert.symbol} has changed {round(change, 2)}%. Current price: {price}")
+            alert.is_alert_today = True
+            alert.save()
 
 
 async def enable_all_jobs_at_start_day_callback(context: ContextTypes.DEFAULT_TYPE):
-    current_jobs = context.job_queue.jobs()
-    if not current_jobs:
-        return
-    for job in current_jobs:
-        job.enabled = True
-
-    write_activity_log("Reset all jobs for the new day")
+    if reset_all_today_alerts():
+        write_activity_log("Reset all jobs for the new day")
+    else:
+        write_activity_log("There's an error when reset today alerts ")
 
 
 def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
@@ -131,25 +125,12 @@ def remove_job_if_exists(alert_id: str, context: ContextTypes.DEFAULT_TYPE) -> b
         return False
 
 
-def load_all_alerts_and_create_job(job_queue: JobQueue):
-    alerts = get_all_alerts()
-    if len(alerts):
-        first = 5
-        for alert in alerts:
-            job_queue.run_repeating(
-                alert_callback, interval=random.randint(
-                    60,  ALERT_INTERVAL + 1), first=first, chat_id=alert.chat_id, name=str(alert.id), data=alert)
-            msg = f"Registed your alert for {alert.symbol} at {alert.percent}% successfully."
-            write_activity_log(msg)
-            first += 1
-
-
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TOKEN).build()
     if not path.exists(DB_NAME):
         init_db()
     else:
-        load_all_alerts_and_create_job(application.job_queue)
+        reset_all_today_alerts()
 
     start_handler = CommandHandler('start', start)
     myid_handler = CommandHandler('my_id', my_id)
@@ -167,5 +148,7 @@ if __name__ == '__main__':
     # add job queue handler
     job_queue = application.job_queue
     job_queue.run_daily(enable_all_jobs_at_start_day_callback,
-                        time(0, 0, 0))
+                        time(0, 0, 0), days=(0, 1, 2, 3, 4, 5, 6))
+    job_queue.run_repeating(
+        alert_callback, interval=ALERT_INTERVAL, first=5)
     application.run_polling()

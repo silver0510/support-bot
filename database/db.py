@@ -19,7 +19,7 @@ class StockPercentAlert(BaseModel):
     screener = CharField()
     exchange = CharField()
     percent = FloatField()
-    is_alert_today = BooleanField()
+    is_alert_today = BooleanField(default=False)
 
 
 def init_db():

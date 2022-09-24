@@ -56,6 +56,15 @@ def get_alert_by_chat_id(chat_id):
         return []
 
 
+def get_today_alerts():
+    try:
+        alerts = StockPercentAlert.select().where(
+            StockPercentAlert.is_alert_today == False)
+        return alerts
+    except Exception as e:
+        return []
+
+
 def get_alert_by_id(id):
     try:
         alert = StockPercentAlert.get_by_id(id)
@@ -63,6 +72,18 @@ def get_alert_by_id(id):
     except Exception as e:
         return None
 
+
+def reset_all_today_alerts():
+    try:
+        alerts = get_all_alerts()
+        if alerts:
+            for alert in alerts:
+                alert.is_alert_today = False
+                alert.save()
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 # if __name__ == '__main__':
 #     register_percent_alert('123456789', 'TSLA', 'america', 'NASDAQ', '5')
