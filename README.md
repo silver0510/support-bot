@@ -29,5 +29,7 @@
     screen -r mybot
     or
     screen -d -r mybot
+#### Show all screen:
+    screen -ls
 #### Delete screen section:
     screen -X -S [session # you want to kill] quit
