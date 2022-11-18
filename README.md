@@ -25,6 +25,8 @@
     ssh <user>@<ip>
 #### Create a new screen and attach to it:
     screen -S mybot
+
+##### Note: Detach from the screen by holding CTRL and pressing A, then D. You can now disconnect from the server by typing exit if you want.
 #### To re-attach to the screen after you logged back in:
     screen -r mybot
     or
