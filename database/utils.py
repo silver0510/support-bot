@@ -11,7 +11,8 @@ def register_percent_alert(chat_id, symbol, screener, exchange, percent):
                 percent), screener=screener, exchange=exchange)
         return alert
     except Exception as e:
-        write_log(f"Register alert error: {e}")
+        write_log(
+            f"Register alert for {symbol} - {screener} - {exchange} error: {e}")
         return None
 
 
@@ -26,7 +27,24 @@ def delete_percent_alert(chat_id, symbol, screener, exchange, percent):
             alert.delete_instance()
             return True, id
     except Exception as e:
-        write_log(f"Delete alert error: {e}")
+        write_log(
+            f"Delete alert for {symbol} - {screener} - {exchange} error: {e}")
+        return False, None
+
+
+def delete_percent_alerts_by_symbol_screener_exchange(symbol, screener, exchange):
+    try:
+        alerts = get_alerts_by_symbol_screener_exchange(
+            symbol, screener, exchange)
+        if len(alerts) == 0:
+            return True
+        else:
+            for alert in alerts:
+                alert.delete_instance()
+            return True
+    except Exception as e:
+        write_log(
+            f"Delete alert for {symbol} - {screener} - {exchange} error: {e}")
         return False, None
 
 
@@ -35,6 +53,15 @@ def get_alert_by_all_information(chat_id, symbol, screener, exchange, percent):
         alert = StockPercentAlert.get(StockPercentAlert.chat_id == chat_id, StockPercentAlert.symbol == symbol, StockPercentAlert.percent == float(
             percent), StockPercentAlert.screener == screener, StockPercentAlert.exchange == exchange)
         return alert
+    except Exception as e:
+        return None
+
+
+def get_alerts_by_symbol_screener_exchange(symbol, screener, exchange):
+    try:
+        alerts = StockPercentAlert.select().where(StockPercentAlert.symbol == symbol,
+                                                  StockPercentAlert.screener == screener, StockPercentAlert.exchange == exchange)
+        return alerts
     except Exception as e:
         return None
 
@@ -85,9 +112,17 @@ def reset_all_today_alerts():
         print(e)
         return False
 
+
 # if __name__ == '__main__':
-#     register_percent_alert('123456789', 'TSLA', 'america', 'NASDAQ', '5')
-#     for i in get_all_alerts():
-#         print(i.symbol)
-#     print(get_alert_by_all_information(
-#         '123456789', 'TSLA', 'america', 'NASDAQ', '5').symbol)
+    #     register_percent_alert('123456789', 'TSLA', 'america', 'NASDAQ', '5')
+    #     for i in get_all_alerts():
+    #         print(i.symbol)
+    #     print(get_alert_by_all_information(
+    #         '123456789', 'TSLA', 'america', 'NASDAQ', '5').symbol)
+    # for alert in get_alerts_by_symbol_screener_exchange(
+    #         'FTTUSDT', 'crypto', 'BINANCE'):
+    #     print(alert.symbol)
+    #     alert.delete_instance()
+
+    # print(len(get_alerts_by_symbol_screener_exchange(
+    #     'FTTUSDT', 'crypto', 'BINANCE')))

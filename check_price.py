@@ -59,7 +59,14 @@ def check_symbol_change(symbol, screener, exchange):
     try:
         return symbol_info.get_analysis().indicators['close'], symbol_info.get_analysis().indicators['change']
     except Exception as e:
-        write_log(f"Check price of symbol error: {e}")
+        write_log(
+            f"Check price for {symbol} - {screener} - {exchange} error: {e}")
+        if str(e) == "Exchange or symbol not found.":
+            delete_percent_alerts_by_symbol_screener_exchange(
+                symbol, screener, exchange)
+            write_log(
+                f"Delete all alerts of {symbol} - {screener} - {exchange}")
+
         return 0, 0
 
 
