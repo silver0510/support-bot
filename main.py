@@ -46,14 +46,17 @@ async def percent_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     if chat_id in ADMINS_TELEGRAM_ID:
         symbol, screener, exchange, percent = context.args
-        alert = register_percent_alert(
-            chat_id, symbol, screener, exchange, percent)
-        if not alert:
-            await update.effective_message.reply_text("Sorry we can not register your alert!")
-            return
-        msg = f"Registed your alert for {symbol} at {percent}% successfully."
-        write_activity_log(msg)
-        await context.bot.send_message(chat_id=chat_id, text=msg)
+        if validate_symbol_data(symbol, screener, exchange):
+            alert = register_percent_alert(
+                chat_id, symbol, screener, exchange, percent)
+            if not alert:
+                await update.effective_message.reply_text("Sorry we can not register your alert!")
+                return
+            msg = f"Registed your alert for {symbol} at {percent}% successfully."
+            write_activity_log(msg)
+            await context.bot.send_message(chat_id=chat_id, text=msg)
+        else:
+            await update.effective_message.reply_text("Sorry this symbol is not exist!")
     else:
         await context.bot.send_message(chat_id=chat_id, text="You have no permission to use this feature. Please contact https://t.me/ryan_pham")
 
