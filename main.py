@@ -1,18 +1,22 @@
-from asyncio import sleep
-import os
-from os import path
-import hashlib
+import json
 import logging
+import os
 import random
+from asyncio import sleep
 from datetime import time
-from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, JobQueue
+from os import path
+
 from dotenv import load_dotenv
-from database.utils import *
+from telegram import Update
+from telegram.ext import (ApplicationBuilder, CommandHandler, ContextTypes,
+                          JobQueue, MessageHandler, filters)
+
+from crypto.alert_strategy import *
+from crypto.constants import *
 from database.db import *
-from check_price import *
 from database.db import init_db
 from database.utils import *
+from trading_view.check_price import *
 from write_log import write_activity_log
 
 load_dotenv()
@@ -97,7 +101,7 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
 
 
-async def alert_callback(context: ContextTypes.DEFAULT_TYPE):
+async def alert_price_by_percent(context: ContextTypes.DEFAULT_TYPE):
     alerts = get_today_alerts()
     for alert in alerts:
         price, change, should_alert = check_alert(alert)
@@ -105,6 +109,16 @@ async def alert_callback(context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(alert.chat_id, text=f"{alert.symbol} has changed {round(change, 2)}%. Current price: {price}")
             alert.is_alert_today = True
             alert.save()
+
+
+async def alert_rsi_divergence(context: ContextTypes.DEFAULT_TYPE):
+    kline_interval = context.job.data["kline_interval"]
+    for symbol in LIST_FUTURE_COINS_USDT:
+        divergences = rsi_divergence(
+            symbol, kline_interval)
+        for divergence in divergences:
+            if divergence["location2"] < 6:
+                await context.bot.send_message(ADMINS_TELEGRAM_ID[0], text=f"{symbol} rsi divergence:\n{json.dumps(divergence, indent=2)}")
 
 
 async def enable_all_jobs_at_start_day_callback(context: ContextTypes.DEFAULT_TYPE):
@@ -150,8 +164,19 @@ if __name__ == '__main__':
 
     # add job queue handler
     job_queue = application.job_queue
-    job_queue.run_daily(enable_all_jobs_at_start_day_callback,
-                        time(0, 0, 0), days=(0, 1, 2, 3, 4, 5, 6))
+    # job_queue.run_daily(enable_all_jobs_at_start_day_callback,
+    #                     time(0, 1, 0), days=(0, 1, 2, 3, 4, 5, 6))
+
+    # job_queue.run_daily(alert_rsi_divergence,
+    #                     time(0, 5, 0), days=(0, 1, 2, 3, 4, 5, 6), data={"kline_interval": Client.KLINE_INTERVAL_1DAY})
+    # job_queue.run_repeating(
+    # alert_price_by_percent, interval=ALERT_INTERVAL, first=5)
+
+    # 1h interval job
     job_queue.run_repeating(
-        alert_callback, interval=ALERT_INTERVAL, first=5)
+        alert_rsi_divergence, interval=3600, first=5, data={"kline_interval": Client.KLINE_INTERVAL_1HOUR})
+
+    # # 1h interval job
+    # job_queue.run_repeating(
+    #     alert_rsi_divergence, interval=14400, first=60, data={"kline_interval": Client.KLINE_INTERVAL_4HOUR})
     application.run_polling()
