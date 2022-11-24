@@ -117,14 +117,15 @@ async def alert_rsi_divergence(context: ContextTypes.DEFAULT_TYPE, kline_interva
             symbol, kline_interval)
         for divergence in divergences:
             if divergence["location2"] < 10:
-                await context.bot.send_message(ADMINS_TELEGRAM_ID[0], text=f"{symbol} {kline_interval.upper()} rsi divergence:\n{json.dumps(divergence, indent=2)}")
+                suggestion = "LONG" if divergence["price2"] < divergence["price1"] else "SHORT"
+                await context.bot.send_message(ADMINS_TELEGRAM_ID[0], text=f"{symbol} {kline_interval.upper()} rsi divergence - {suggestion}:\n{json.dumps(divergence, indent=2)}")
 
 
 async def alert_minute(context: ContextTypes.DEFAULT_TYPE):
     time_hour = dt.datetime.utcnow().hour
     time_minute = dt.datetime.utcnow().minute
 
-    if time_minute == 1:
+    if time_minute == 3:
         # Notification for 1 DAY
         if time_hour == 0:
             # Check RSI 1D
@@ -139,7 +140,7 @@ async def alert_minute(context: ContextTypes.DEFAULT_TYPE):
         # Reset alert for price
         if time_hour == 9:
             await enable_all_jobs_at_start_day_callback()
-    if time_minute != 0:
+    if time_minute > 3:
         await alert_price_by_percent(context)
 
 
