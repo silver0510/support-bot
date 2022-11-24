@@ -34,7 +34,8 @@ def __ma_trending_prime_ma(symbol, trend_consensus_func, short_trend_interval):
 
 def rsi_divergence(symbol, interval):
     detect_length = 34
-    pivot_checking_period = 5
+    pivot_checking_period = 3
+    divergence_threshold = 3
     prices, rsis = calc_1000_rsi(symbol, interval)
     price_pivot_highs, price_pivot_lows = get_pivot_low_high(
         prices, pivot_checking_period)
@@ -52,7 +53,9 @@ def rsi_divergence(symbol, interval):
             price2 = price_pivot_highs[j]
             if rsi2 < 60 or price2 == 0:
                 continue
-            if (price2 > price1) and (rsi2 < rsi1):
+            p_change = (price2 - price1) * 100 / price2
+            rsi_change = (rsi1 - rsi2) * 100 / rsi1
+            if p_change > divergence_threshold and rsi_change > divergence_threshold:
                 divergences.append({
                     "price1": price1,
                     "price2": price2,
@@ -71,7 +74,9 @@ def rsi_divergence(symbol, interval):
             price2 = price_pivot_lows[j]
             if (rsi2 == 0 or rsi2 > 40) or (price2 == 0):
                 continue
-            if (price2 < price1) and (rsi2 > rsi1):
+            p_change = (price1 - price2) * 100 / price1
+            rsi_change = (rsi2 - rsi1) * 100 / rsi2
+            if p_change > divergence_threshold and rsi_change > divergence_threshold:
                 divergences.append({
                     "price1": price1,
                     "price2": price2,
