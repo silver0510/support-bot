@@ -3,7 +3,7 @@ import logging
 import os
 import random
 from asyncio import sleep
-from datetime import time
+import datetime as dt
 from os import path
 
 from dotenv import load_dotenv
@@ -112,13 +112,27 @@ async def alert_price_by_percent(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def alert_rsi_divergence(context: ContextTypes.DEFAULT_TYPE):
-    kline_interval = context.job.data["kline_interval"]
-    for symbol in LIST_FUTURE_COINS_USDT:
-        divergences = rsi_divergence(
-            symbol, kline_interval)
-        for divergence in divergences:
-            if divergence["location2"] < 6:
-                await context.bot.send_message(ADMINS_TELEGRAM_ID[0], text=f"{symbol} rsi divergence:\n{json.dumps(divergence, indent=2)}")
+    async def alert_checking(kline_interval):
+        for symbol in LIST_FUTURE_COINS_USDT:
+            divergences = rsi_divergence(
+                symbol, kline_interval)
+            for divergence in divergences:
+                if divergence["location2"] < 10:
+                    await context.bot.send_message(ADMINS_TELEGRAM_ID[0], text=f"{symbol} {kline_interval.upper()} rsi divergence:\n{json.dumps(divergence, indent=2)}")
+
+    # kline_interval = context.job.data["kline_interval"]
+    await alert_checking(Client.KLINE_INTERVAL_1HOUR)
+
+    time_hour = dt.datetime.utcnow().hour
+    # Notification for 1 DAY
+    if time_hour == 0:
+        sleep(30)
+        await alert_checking(Client.KLINE_INTERVAL_1DAY)
+
+    # Notification for 4 HOURS
+    if (time_hour % 4) == 0:
+        sleep(30)
+        await alert_checking(Client.KLINE_INTERVAL_4HOUR)
 
 
 async def enable_all_jobs_at_start_day_callback(context: ContextTypes.DEFAULT_TYPE):
@@ -164,17 +178,17 @@ if __name__ == '__main__':
 
     # add job queue handler
     job_queue = application.job_queue
-    # job_queue.run_daily(enable_all_jobs_at_start_day_callback,
-    #                     time(0, 1, 0), days=(0, 1, 2, 3, 4, 5, 6))
+    job_queue.run_daily(enable_all_jobs_at_start_day_callback,
+                        dt.time(2, 5, 0), days=(0, 1, 2, 3, 4, 5, 6))
 
-    # job_queue.run_daily(alert_rsi_divergence,
-    #                     time(0, 5, 0), days=(0, 1, 2, 3, 4, 5, 6), data={"kline_interval": Client.KLINE_INTERVAL_1DAY})
-    # job_queue.run_repeating(
-    # alert_price_by_percent, interval=ALERT_INTERVAL, first=5)
+    job_queue.run_repeating(
+        alert_price_by_percent, interval=ALERT_INTERVAL, first=10)
 
     # 1h interval job
+    first = dt.time(dt.datetime.utcnow().hour,
+                    dt.datetime.utcnow().minute + 1, 0, tzinfo=dt.timezone.utc)
     job_queue.run_repeating(
-        alert_rsi_divergence, interval=3600, first=5, data={"kline_interval": Client.KLINE_INTERVAL_1HOUR})
+        alert_rsi_divergence, interval=3600, first=first)
 
     # # 1h interval job
     # job_queue.run_repeating(

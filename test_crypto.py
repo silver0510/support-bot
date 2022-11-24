@@ -1,5 +1,6 @@
 import plotext as plt
 from binance.client import Client
+import datetime as dt
 
 from crypto.alert_strategy import *
 import crypto.indicators as indis
@@ -9,13 +10,8 @@ from crypto.util import print_json
 
 
 def main():
-    for symbol in LIST_FUTURE_COINS_USDT:
-        divergences = rsi_divergence(
-            symbol, Client.KLINE_INTERVAL_1HOUR)
-        for divergence in divergences:
-            if divergence["location2"] < 10:
-                print("Symbol: %s" % symbol)
-                print_json(divergence)
+    print(dt.datetime.utcnow().hour)
+    # first = dt.time(dt.datetime.utcnow().hour, 0, 0, tzinfo=dt.timezone.utc)
 
 
 def show_trend():
