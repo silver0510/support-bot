@@ -138,8 +138,8 @@ async def alert_minute(context: ContextTypes.DEFAULT_TYPE):
         await alert_rsi_divergence(context, Client.KLINE_INTERVAL_1HOUR)
 
         # Reset alert for price
-        if time_hour == 9:
-            await enable_all_jobs_at_start_day_callback()
+        if time_hour == 2:
+            await enable_all_jobs_at_start_day_callback(context)
     if time_minute > 3:
         await alert_price_by_percent(context)
 
