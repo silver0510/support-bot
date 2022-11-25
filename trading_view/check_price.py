@@ -1,5 +1,5 @@
 from tradingview_ta import TA_Handler, Interval, Exchange
-from database.utils import *
+from database.repositories.stock_percent_alert import *
 from write_log import write_log
 
 
