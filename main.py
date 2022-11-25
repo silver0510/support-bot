@@ -176,15 +176,12 @@ if __name__ == '__main__':
     percent_alert_handler = CommandHandler('register_alert', percent_alert)
     show_alerts_handler = CommandHandler('show_alerts', show_alerts)
     delete_alert_handler = CommandHandler('delete_alert', delete_alert)
-    rsi_divergence_15m_alert_handler = CommandHandler(
-        'check_rsi_divergence_15m', check_rsi_divergence_15m)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
     application.add_handler(start_handler)
     application.add_handler(myid_handler)
     application.add_handler(percent_alert_handler)
     application.add_handler(show_alerts_handler)
     application.add_handler(delete_alert_handler)
-    application.add_handler(rsi_divergence_15m_alert_handler)
     application.add_handler(unknown_handler)
 
     # add job queue handler
