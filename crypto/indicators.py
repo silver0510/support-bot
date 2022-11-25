@@ -62,6 +62,11 @@ def current_price(symbol):
         symbol, interval=Client.KLINE_INTERVAL_30MINUTE, limit=1)[0]).close_price
 
 
+def last_close_price(symbol, kline_interval=Client.KLINE_INTERVAL_15MINUTE):
+    return Kline(client.get_historical_klines(
+        symbol, interval=kline_interval, limit=2)[0]).close_price
+
+
 def get_long_medium_short_rsi(symbol, short_interval, medium_interval, long_interval):
     short_rsi = calc_current_rsi(symbol, short_interval)
     medium_rsi = calc_current_rsi(symbol, medium_interval)

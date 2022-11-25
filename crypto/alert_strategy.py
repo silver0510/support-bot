@@ -87,3 +87,15 @@ def rsi_divergence(symbol, interval):
                 })
 
     return divergences
+
+
+def make_rsi_divergence_alert_msg(symbol, kline_interval):
+    divergences = rsi_divergence(
+        symbol, kline_interval)
+    msgs = []
+    for divergence in divergences:
+        if divergence["location2"] < 8:
+            suggestion = "LONG" if divergence["price2"] < divergence["price1"] else "SHORT"
+            msgs.append(
+                f"{symbol} {kline_interval.upper()} rsi divergence - {suggestion}:\n{json.dumps(divergence, indent=2)}")
+    return msgs

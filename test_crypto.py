@@ -2,14 +2,14 @@ import plotext as plt
 from binance.client import Client
 
 from crypto.alert_strategy import *
-import crypto.indicators as indis
+from crypto.indicators import *
 from crypto.constants import *
 from crypto.trending import Trending
 from crypto.util import print_json
 
 
 def main():
-    check_rsi_divergence()
+    print(last_close_price('BTCUSDT'))
 
 
 def check_rsi_divergence():
@@ -25,7 +25,7 @@ def check_rsi_divergence():
 def show_trend():
     symbol = 'ETHUSDT'
     interval = Client.KLINE_INTERVAL_1HOUR
-    print(f'Current price: {indis.current_price(symbol)}')
+    print(f'Current price: {current_price(symbol)}')
     ema_trend = ma_trending_prime_ma_for_15_1_4(symbol)
     print_json(ema_trend["trend_consensus"])
     print(

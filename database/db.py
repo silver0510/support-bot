@@ -22,8 +22,16 @@ class StockPercentAlert(BaseModel):
     is_alert_today = BooleanField(default=False)
 
 
+class ClosePricetAlert(BaseModel):
+    chat_id = CharField()
+    symbol = CharField()
+    kline = CharField()
+    price = FloatField()
+    trend = CharField()
+
+
 def init_db():
-    list_tables = [StockPercentAlert]
+    list_tables = [StockPercentAlert, ClosePricetAlert]
     db.connect()
     db.drop_tables(list_tables)
     db.create_tables(list_tables)

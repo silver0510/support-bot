@@ -15,7 +15,7 @@ from crypto.alert_strategy import *
 from crypto.constants import *
 from database.db import *
 from database.db import init_db
-from database.utils import *
+from database.repositories.stock_percent_alert import *
 from trading_view.check_price import *
 from write_log import write_activity_log
 
@@ -26,6 +26,8 @@ ALERT_INTERVAL = int(os.getenv('ALERT_INTERVAL'))
 ADMINS_TELEGRAM_ID = []
 for id in os.getenv('ADMINS_TELEGRAM_ID').split(','):
     ADMINS_TELEGRAM_ID.append(int(id.strip()))
+
+SUPER_ADMIN_ID = ADMINS_TELEGRAM_ID[0]
 
 # logging.basicConfig(
 #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -113,12 +115,9 @@ async def alert_price_by_percent(context: ContextTypes.DEFAULT_TYPE):
 
 async def alert_rsi_divergence(context: ContextTypes.DEFAULT_TYPE, kline_interval):
     for symbol in LIST_FUTURE_COINS_USDT:
-        divergences = rsi_divergence(
-            symbol, kline_interval)
-        for divergence in divergences:
-            if divergence["location2"] < 10:
-                suggestion = "LONG" if divergence["price2"] < divergence["price1"] else "SHORT"
-                await context.bot.send_message(ADMINS_TELEGRAM_ID[0], text=f"{symbol} {kline_interval.upper()} rsi divergence - {suggestion}:\n{json.dumps(divergence, indent=2)}")
+        msgs = make_rsi_divergence_alert_msg(symbol, kline_interval)
+        for msg in msgs:
+            await context.bot.send_message(SUPER_ADMIN_ID, text=msg)
 
 
 async def alert_minute(context: ContextTypes.DEFAULT_TYPE):
@@ -177,19 +176,22 @@ if __name__ == '__main__':
     percent_alert_handler = CommandHandler('register_alert', percent_alert)
     show_alerts_handler = CommandHandler('show_alerts', show_alerts)
     delete_alert_handler = CommandHandler('delete_alert', delete_alert)
+    rsi_divergence_15m_alert_handler = CommandHandler(
+        'check_rsi_divergence_15m', check_rsi_divergence_15m)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
     application.add_handler(start_handler)
     application.add_handler(myid_handler)
     application.add_handler(percent_alert_handler)
     application.add_handler(show_alerts_handler)
     application.add_handler(delete_alert_handler)
+    application.add_handler(rsi_divergence_15m_alert_handler)
     application.add_handler(unknown_handler)
 
     # add job queue handler
     job_queue = application.job_queue
 
-    job_queue.run_repeating(
-        alert_minute, interval=60, first=5)
+    # job_queue.run_repeating(
+    #     alert_minute, interval=60, first=5)
 
     # # 1h interval job
     # job_queue.run_repeating(
