@@ -35,3 +35,8 @@
     screen -ls
 #### Delete screen section:
     screen -X -S [session # you want to kill] quit
+or
+    
+    CTRL+a and then 'k' will kill a screen session
+#### Send a CRT+C to a screen session running a script:
+    screen -X -S "sessionname" stuff "^C"
