@@ -99,6 +99,14 @@ async def delete_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=chat_id, text=msg)
 
 
+async def checking_rsi_15_divergences(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    if chat_id != SUPER_ADMIN_ID:
+        await context.bot.send_message(chat_id=chat_id, text="You have no permission to use this feature. Please contact https://t.me/ryan_pham")
+    else:
+        await alert_rsi_divergence(context, Client.KLINE_INTERVAL_15MINUTE, True)
+
+
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
 
@@ -113,11 +121,17 @@ async def alert_price_by_percent(context: ContextTypes.DEFAULT_TYPE):
             alert.save()
 
 
-async def alert_rsi_divergence(context: ContextTypes.DEFAULT_TYPE, kline_interval):
+async def alert_rsi_divergence(context: ContextTypes.DEFAULT_TYPE, kline_interval, for_command=False):
+    is_sent = False
     for symbol in LIST_FUTURE_COINS_USDT:
         msgs = make_rsi_divergence_alert_msg(symbol, kline_interval)
+        if len(msgs) and not is_sent:
+            is_sent = True
         for msg in msgs:
             await context.bot.send_message(SUPER_ADMIN_ID, text=msg)
+    if not is_sent and for_command:
+        await context.bot.send_message(
+            SUPER_ADMIN_ID, text="There's no any rsi divergences")
 
 
 async def alert_minute(context: ContextTypes.DEFAULT_TYPE):
@@ -176,21 +190,24 @@ if __name__ == '__main__':
     percent_alert_handler = CommandHandler('register_alert', percent_alert)
     show_alerts_handler = CommandHandler('show_alerts', show_alerts)
     delete_alert_handler = CommandHandler('delete_alert', delete_alert)
+    checking_rsi_15_divergences_handler = CommandHandler(
+        'check_rsi_15_div', checking_rsi_15_divergences)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
     application.add_handler(start_handler)
     application.add_handler(myid_handler)
     application.add_handler(percent_alert_handler)
     application.add_handler(show_alerts_handler)
     application.add_handler(delete_alert_handler)
+    application.add_handler(checking_rsi_15_divergences_handler)
     application.add_handler(unknown_handler)
 
     # add job queue handler
     job_queue = application.job_queue
 
-    # job_queue.run_repeating(
-    #     alert_minute, interval=60, first=5)
+    # 1h interval job
+    job_queue.run_repeating(
+        alert_minute, interval=60, first=5)
 
-    # # 1h interval job
     # job_queue.run_repeating(
     #     alert_rsi_divergence, interval=14400, first=60, data={"kline_interval": Client.KLINE_INTERVAL_4HOUR})
     application.run_polling()

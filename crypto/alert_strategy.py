@@ -1,8 +1,16 @@
+from os import path
+
 from binance.client import Client
+from dotenv import load_dotenv
 
 from crypto.indicators import *
 from crypto.trending import Trending
 from crypto.util import *
+
+load_dotenv()
+RSI_DIVERGENCE_RANGE = os.getenv('RSI_DIVERGENCE_RANGE')
+RSI_DIVERGENCE_PIVOT_CHECKING_PERIOD = os.getenv(
+    'RSI_DIVERGENCE_PIVOT_CHECKING_PERIOD')
 
 
 def ma_trending_prime_ma_for_15_1_4(symbol):
@@ -33,9 +41,9 @@ def __ma_trending_prime_ma(symbol, trend_consensus_func, short_trend_interval):
 
 
 def rsi_divergence(symbol, interval):
-    detect_length = 34
-    pivot_checking_period = 3
-    divergence_threshold = 3
+    detect_length = int(RSI_DIVERGENCE_RANGE)
+    pivot_checking_period = int(RSI_DIVERGENCE_PIVOT_CHECKING_PERIOD)
+    divergence_percent_threshold = 3
     prices, rsis = calc_1000_rsi(symbol, interval)
     price_pivot_highs, price_pivot_lows = get_pivot_low_high(
         prices, pivot_checking_period)
@@ -55,7 +63,7 @@ def rsi_divergence(symbol, interval):
                 continue
             p_change = (price2 - price1) * 100 / price2
             rsi_change = (rsi1 - rsi2) * 100 / rsi1
-            if p_change > divergence_threshold and rsi_change > divergence_threshold:
+            if p_change > divergence_percent_threshold and rsi_change > divergence_percent_threshold:
                 divergences.append({
                     "price1": price1,
                     "price2": price2,
@@ -76,7 +84,7 @@ def rsi_divergence(symbol, interval):
                 continue
             p_change = (price1 - price2) * 100 / price1
             rsi_change = (rsi2 - rsi1) * 100 / rsi2
-            if p_change > divergence_threshold and rsi_change > divergence_threshold:
+            if p_change > divergence_percent_threshold and rsi_change > divergence_percent_threshold:
                 divergences.append({
                     "price1": price1,
                     "price2": price2,
@@ -94,7 +102,7 @@ def make_rsi_divergence_alert_msg(symbol, kline_interval):
         symbol, kline_interval)
     msgs = []
     for divergence in divergences:
-        if divergence["location2"] < 8:
+        if divergence["location2"] < 6:
             suggestion = "LONG" if divergence["price2"] < divergence["price1"] else "SHORT"
             msgs.append(
                 f"{symbol} {kline_interval.upper()} rsi divergence - {suggestion}:\n{json.dumps(divergence, indent=2)}")
