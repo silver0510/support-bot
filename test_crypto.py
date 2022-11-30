@@ -1,15 +1,19 @@
 import plotext as plt
 from binance.client import Client
 
-from crypto.alert_strategy import *
-from crypto.indicators import *
+from alert_strategies.rsi_alert import *
+from alert_strategies.ma_alert import *
+from analysis.indicators import *
 from crypto.constants import *
-from crypto.trending import Trending
-from crypto.util import print_json
+from analysis.trending import *
+from util import print_json
 
 
 def main():
-    print(last_close_price('BTCUSDT'))
+    # print(last_close_price('BTCUSDT'))
+    # show_trend()
+    # get_trend_with_rsi()
+    get_top_10()
 
 
 def check_rsi_divergence():
@@ -35,7 +39,7 @@ def show_trend():
 
 def get_trend_with_rsi():
     for symbol in LIST_FUTURE_COINS_BUSD:
-        info = Trending.detect_long_short_by_rsi(
+        info = detect_long_short_by_rsi(
             symbol, Client.KLINE_INTERVAL_15MINUTE, Client.KLINE_INTERVAL_1HOUR, Client.KLINE_INTERVAL_4HOUR)
         info["symbol"] = symbol
         print_json(info)

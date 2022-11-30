@@ -1,10 +1,3 @@
-import json
-
-
-def print_json(json_string):
-    print(json.dumps(json_string, indent=2))
-
-
 def get_pivot_low_high(data, period):
     highs = []
     lows = []

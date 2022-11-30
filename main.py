@@ -11,12 +11,12 @@ from telegram import Update
 from telegram.ext import (ApplicationBuilder, CommandHandler, ContextTypes,
                           JobQueue, MessageHandler, filters)
 
-from crypto.alert_strategy import *
+from alert_strategies.rsi_alert import *
 from crypto.constants import *
 from database.db import *
 from database.db import init_db
 from database.repositories.stock_percent_alert import *
-from trading_view.check_price import *
+from analysis.check_price import *
 from write_log import write_activity_log
 
 load_dotenv()
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     show_alerts_handler = CommandHandler('show_alerts', show_alerts)
     delete_alert_handler = CommandHandler('delete_alert', delete_alert)
     checking_rsi_15_divergences_handler = CommandHandler(
-        'check_rsi_15_div', checking_rsi_15_divergences)
+        'rsi_15_div', checking_rsi_15_divergences)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
     application.add_handler(start_handler)
     application.add_handler(myid_handler)
