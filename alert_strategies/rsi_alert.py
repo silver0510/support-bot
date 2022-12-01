@@ -79,3 +79,30 @@ def make_rsi_divergence_alert_msg(symbol, kline_interval):
             msgs.append(
                 f"{symbol} {kline_interval.upper()} rsi divergence - {suggestion}:\n{json.dumps(divergence, indent=2)}")
     return msgs
+
+
+def detect_long_short_by_rsi(symbol, short_interval, medium_interval, long_interval):
+    short_rsi, medium_rsi, long_rsi = get_long_medium_short_rsi(
+        symbol, short_interval, medium_interval, long_interval)
+    if (short_rsi > 19 and medium_rsi > 39 and long_rsi > 60) or (short_rsi > 39 and medium_rsi > 59 and long_rsi > 79):
+        return {
+            "short_rsi": short_rsi,
+            "medium_rsi": medium_rsi,
+            "long_rsi": long_rsi,
+            "conclusion": "LONG"
+        }
+
+    if (short_rsi < 61 and medium_rsi < 41 and long_rsi < 21) or (short_rsi < 81 and medium_rsi < 61 and long_rsi < 41):
+        return {
+            "short_rsi": short_rsi,
+            "medium_rsi": medium_rsi,
+            "long_rsi": long_rsi,
+            "conclusion": "SHORT"
+        }
+
+    return {
+        "short_rsi": short_rsi,
+        "medium_rsi": medium_rsi,
+        "long_rsi": long_rsi,
+        "conclusion": "SIDE_WAY"
+    }

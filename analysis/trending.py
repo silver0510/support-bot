@@ -100,30 +100,3 @@ def __is_ema_important(symbol='BTCBUSD', kline_interval=Client.KLINE_INTERVAL_1D
         return length, current_value, True, percents_of_below_ema, "Below EMA"
 
     return length, current_value, False, max(percents_of_above_ema, percents_of_below_ema), "Sideway"
-
-
-def detect_long_short_by_rsi(symbol, short_interval, medium_interval, long_interval):
-    short_rsi, medium_rsi, long_rsi = get_long_medium_short_rsi(
-        symbol, short_interval, medium_interval, long_interval)
-    if (short_rsi > 19 and medium_rsi > 39 and long_rsi > 60) or (short_rsi > 39 and medium_rsi > 59 and long_rsi > 79):
-        return {
-            "short_rsi": short_rsi,
-            "medium_rsi": medium_rsi,
-            "long_rsi": long_rsi,
-            "conclusion": "LONG"
-        }
-
-    if (short_rsi < 61 and medium_rsi < 41 and long_rsi < 21) or (short_rsi < 81 and medium_rsi < 61 and long_rsi < 41):
-        return {
-            "short_rsi": short_rsi,
-            "medium_rsi": medium_rsi,
-            "long_rsi": long_rsi,
-            "conclusion": "SHORT"
-        }
-
-    return {
-        "short_rsi": short_rsi,
-        "medium_rsi": medium_rsi,
-        "long_rsi": long_rsi,
-        "conclusion": "SIDE_WAY"
-    }
