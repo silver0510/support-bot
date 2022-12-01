@@ -1,4 +1,3 @@
-from analysis.indicators import *
 from analysis.trending import *
 
 

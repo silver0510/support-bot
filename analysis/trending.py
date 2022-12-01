@@ -1,6 +1,5 @@
 from binance.client import Client
 
-from crypto.constants import *
 from analysis.indicators import *
 
 
@@ -50,7 +49,6 @@ def current_trend_1_4_1(symbol='BTCBUSD'):
 def __trend_short_medium_long_consensus(symbol, short_interval, medium_interval, long_interval):
     short_trend = detect_trend_interval(
         symbol, short_interval)
-
     medium_trend = detect_trend_interval(
         symbol, medium_interval)
     long_trend = detect_trend_interval(

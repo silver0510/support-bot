@@ -1,21 +1,6 @@
-from tradingview_ta import TA_Handler, Interval, Exchange
 from database.repositories.stock_percent_alert import *
+from apis.tradingview_api.custom_api import *
 from write_log import write_log
-
-
-def validate_symbol_data(symbol, screener, exchange):
-    symbol_info = TA_Handler(
-        symbol=symbol,
-        screener=screener,
-        exchange=exchange,
-        interval=Interval.INTERVAL_1_DAY,
-    )
-    try:
-        symbol_info.get_analysis()
-        return True
-    except Exception as e:
-        write_log(f"Validation symbol error: {e}")
-        return False
 
 
 def get_and_check_alert(id):
@@ -50,14 +35,9 @@ def check_alert(alert):
 
 
 def check_symbol_change(symbol, screener, exchange):
-    symbol_info = TA_Handler(
-        symbol=symbol,
-        screener=screener,
-        exchange=exchange,
-        interval=Interval.INTERVAL_1_DAY,
-    )
+    symbol_info = get_symbol_data(symbol, screener, exchange)
     try:
-        return symbol_info.get_analysis().indicators['close'], symbol_info.get_analysis().indicators['change']
+        return symbol_info['close'], symbol_info['change']
     except Exception as e:
         write_log(
             f"Check price for {symbol} - {screener} - {exchange} error: {e}")
@@ -68,7 +48,3 @@ def check_symbol_change(symbol, screener, exchange):
                 f"Delete all alerts of {symbol} - {screener} - {exchange}")
 
         return 0, 0
-
-
-if __name__ == '__main__':
-    print(validate_symbol_data('TSLA', 'america', 'NASDAQ'))

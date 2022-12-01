@@ -1,7 +1,6 @@
 from os import path
 import json
 
-from binance.client import Client
 from dotenv import load_dotenv
 
 from analysis.indicators import *

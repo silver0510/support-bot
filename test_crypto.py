@@ -4,7 +4,8 @@ from binance.client import Client
 from alert_strategies.rsi_alert import *
 from alert_strategies.ma_alert import *
 from analysis.indicators import *
-from crypto.constants import *
+from apis.binance_api.configuration.constants import *
+from apis.binance_api.custom_api import *
 from analysis.trending import *
 from util import print_json
 
