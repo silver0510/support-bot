@@ -138,7 +138,6 @@ async def alert_rsi_divergence(context: ContextTypes.DEFAULT_TYPE, kline_interva
 async def alert_minute(context: ContextTypes.DEFAULT_TYPE):
     time_hour = dt.datetime.utcnow().hour
     time_minute = dt.datetime.utcnow().minute
-    await alert_rsi_divergence(context, Client.KLINE_INTERVAL_1HOUR)
     if time_minute == 3:
         # Notification for 1 DAY
         if time_hour == 0:
